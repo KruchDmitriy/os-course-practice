@@ -1,2 +1,4 @@
 kernel
 kernel.ld
+*.o
+*.d

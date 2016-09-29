@@ -36,4 +36,6 @@ static inline uint32_t in32(unsigned short port)
 	return value;
 }
 
+void init_serial();
+
 #endif /* __IOPORT_H__ */

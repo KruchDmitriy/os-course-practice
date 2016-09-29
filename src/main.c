@@ -1,3 +1,5 @@
+#include "ioport.h"
+
 static void qemu_gdb_hang(void)
 {
 #ifdef DEBUG
@@ -16,6 +18,8 @@ void main(void)
 	struct desc_table_ptr ptr = {0, 0};
 
 	write_idtr(&ptr);
+
+    init_serial();
 
 	while (1);
 }
