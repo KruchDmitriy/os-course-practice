@@ -17,3 +17,7 @@ void init_serial() {
 // write to +3, 3
     out8(0x3fb, 3);
 }
+
+void print(char a) {
+    out8(0x3f8, a);
+}
