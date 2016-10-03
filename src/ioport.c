@@ -18,6 +18,10 @@ void init_serial() {
     out8(0x3fb, 3);
 }
 
-void print(char a) {
+void print_char(char a) {
+	uint8_t n = in8(0x3fd);
+	while (!(n & 32)) {
+		n = in8(0x3fd);
+	}
     out8(0x3f8, a);
 }

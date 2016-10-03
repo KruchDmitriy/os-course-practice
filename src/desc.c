@@ -29,7 +29,7 @@ idt_descr create_idtr_record(uint64_t handler, int dpl, int int_gate) {
 }
 
 void c_handler(stack_frame* frame) {
-    print(48 + frame->int_no);
+    print_char(48 + frame->int_no);
 }
 
 void init_idtr(struct desc_table_ptr* ptr) {

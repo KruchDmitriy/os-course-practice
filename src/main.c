@@ -22,7 +22,5 @@ void main(void)
 
     init_serial();
 
-	__asm__ ("int $8");
-
 	while (1);
 }
