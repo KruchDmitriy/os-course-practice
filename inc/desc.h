@@ -62,7 +62,7 @@ static inline void write_gdtr(const struct desc_table_ptr *ptr)
 	__asm__ ("lgdt %0" : : "m"(*ptr));
 }
 
-idt_descr create_idtr_record(uint64_t handler, int dpl, int int_gate);
+idt_descr create_idtr_record(uint64_t handler, int int_gate);
 
 void c_handler(stack_frame* frame);
 

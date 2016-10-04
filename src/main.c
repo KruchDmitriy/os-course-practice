@@ -9,6 +9,7 @@ static void qemu_gdb_hang(void)
 
 #include <desc.h>
 #include "ioport.h"
+#include "io.h"
 
 void main(void)
 {
@@ -22,5 +23,6 @@ void main(void)
 
     init_serial();
 
+    __asm__(" int $1 ");
 	while (1);
 }
