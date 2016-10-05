@@ -11,7 +11,6 @@ static void qemu_gdb_hang(void)
 #include "ioport.h"
 #include "ints.h"
 #include "io.h"
-#include "pic.h"
 #include "pit.h"
 
 void main(void)
@@ -24,8 +23,8 @@ void main(void)
 
     init_serial();
     init_pic();
-    disguise_master(0xFE);
-    disguise_slave(0xFF);
+    mask_master(0xFE);
+    mask_slave(0xFF);
 
     enable_ints();
 

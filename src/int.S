@@ -54,6 +54,7 @@ common:
     pushq %rcx
     pushq %rbx
     pushq %rax
+    cld
     movq %rsp, %rdi
     call c_handler
     popq %rax
