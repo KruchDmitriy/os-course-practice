@@ -1,6 +1,6 @@
-#include "desc.h"
+#include "ints.h"
 #include "io.h"
-#include "pic.h"
+#include "memory.h"
 
 extern uint64_t offsets[];
 idt_descr descrs[IDT_SIZE];

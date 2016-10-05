@@ -7,7 +7,7 @@
 #include "ioport.h"
 
 static inline void init_pit() {
-	out8(PIT_COMMAND, 48);
+	out8(PIT_COMMAND, 0x34);
 	out8(PIT_DATA, 0xFF);
 	out8(PIT_DATA, 0xFF);
 }
