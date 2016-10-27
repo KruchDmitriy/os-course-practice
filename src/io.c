@@ -36,6 +36,11 @@ static void convert_n_print(uint64_t n, int base) {
 		print_char('x');
 	}
 
+	if (n == 0) {
+		print_char('0');
+		return;
+	}
+
 	int i = 0;
 	for (; n != 0; i++) {
 		digits[i] = symbols[n % base];
@@ -51,6 +56,11 @@ static void convert_n_print(uint64_t n, int base) {
 static void print_dec(int64_t n) {
 	char symbols[] = "0123456789";
 	char digits[20];
+
+	if (n == 0) {
+		print_char('0');
+		return;
+	}
 
 	if (n < 0) {
 		print_char('-');
@@ -72,6 +82,11 @@ static void print_dec(int64_t n) {
 static void print_udec(uint64_t n) {
 	char symbols[] = "0123456789";
 	char digits[20];
+
+	if (n == 0) {
+		print_char('0');
+		return;
+	}
 
 	int i = 0;
 	for (; n != 0; i++) {
@@ -197,6 +212,11 @@ static void convert_n_sprint(char **s, int64_t* size, uint64_t n, int base) {
 		sprint_char(s, size, 'x');
 	}
 
+	if (n == 0) {
+		sprint_char(s, size, '0');
+		return;
+	}
+
 	int i = 0;
 	for (; n != 0; i++) {
 		digits[i] = symbols[n % base];
@@ -212,6 +232,11 @@ static void convert_n_sprint(char **s, int64_t* size, uint64_t n, int base) {
 static void sprint_dec(char **s, int64_t* size, int64_t n) {
 	char symbols[] = "0123456789";
 	char digits[20];
+
+	if (n == 0) {
+		sprint_char(s, size, '0');
+		return;
+	}
 
 	if (n < 0) {
 		sprint_char(s, size, '-');
@@ -233,6 +258,11 @@ static void sprint_dec(char **s, int64_t* size, int64_t n) {
 static void sprint_udec(char **s, int64_t* size, uint64_t n) {
 	char symbols[] = "0123456789";
 	char digits[20];
+
+	if (n == 0) {
+		sprint_char(s, size, '0');
+		return;
+	}
 
 	int i = 0;
 	for (; n != 0; i++) {

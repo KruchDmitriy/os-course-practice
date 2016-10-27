@@ -14,6 +14,9 @@
 start32:
 	jmp 1f
 
+.global mboot_info
+mboot_info:
+	.long
 
 	.align 16
 multiboot_header:
@@ -44,7 +47,7 @@ gdt_ptr:
 	.long gdt
 gdt_ptr64:
 	.word (gdt_ptr - gdt - 1)
-	.quad (gdt + VIRTUAL_BASE) 
+	.quad (gdt + VIRTUAL_BASE)
 idt_ptr:
 	.word 0
 	.quad 0
@@ -54,6 +57,8 @@ idt_ptr:
 stack_top:
 
 1:
+	mov %ebx, mboot_info
+
 	movl $stack_top, %esp
 	pushl %eax
 	call videomem_clrscr
@@ -74,7 +79,7 @@ stack_top:
 	rdmsr
 	orl $EFER_LM, %eax
 	wrmsr
-	
+
 	pushl $enable_paging
 	call videomem_puts
 	addl $4, %esp
@@ -135,6 +140,7 @@ setup_mapping:
 	movl $(bootstrap_pml4 - VIRTUAL_BASE), %edi
 	movl $(bootstrap_pml3 - VIRTUAL_BASE + PTE_PRESENT + PTE_WRITE), %eax
 	movl %eax, (%edi)
+	movl %eax, 2048(%edi)
 	movl %eax, 4088(%edi)
 
 	movl %cr4, %eax
