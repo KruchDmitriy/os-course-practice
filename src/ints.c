@@ -5,6 +5,13 @@
 extern uint64_t offsets[];
 idt_descr descrs[IDT_SIZE];
 
+void ints_setup() {
+    struct desc_table_ptr ptr = { 0 , 0 };
+    init_idtr(&ptr);
+    write_idtr(&ptr);
+    init_pic();
+}
+
 idt_descr create_idtr_record(uint64_t handler, int int_gate) {
     idt_descr descr;
     descr.selector = KERNEL_CS;

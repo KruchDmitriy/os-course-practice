@@ -79,4 +79,6 @@ void c_handler(stack_frame* frame);
 
 void init_idtr(struct desc_table_ptr* ptr);
 
+void ints_setup();
+
 #endif /*__INTS_H__*/
