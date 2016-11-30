@@ -14,9 +14,6 @@
 start32:
 	jmp 1f
 
-.global mboot_info
-mboot_info:
-	.long
 
 	.align 16
 multiboot_header:
@@ -47,7 +44,7 @@ gdt_ptr:
 	.long gdt
 gdt_ptr64:
 	.word (gdt_ptr - gdt - 1)
-	.quad (gdt + VIRTUAL_BASE)
+	.quad (gdt + VIRTUAL_BASE) 
 idt_ptr:
 	.word 0
 	.quad 0
@@ -57,9 +54,8 @@ idt_ptr:
 stack_top:
 
 1:
-	mov %ebx, mboot_info
-
 	movl $stack_top, %esp
+	pushl %ebx
 	pushl %eax
 	call videomem_clrscr
 	popl %eax
@@ -79,7 +75,7 @@ stack_top:
 	rdmsr
 	orl $EFER_LM, %eax
 	wrmsr
-
+	
 	pushl $enable_paging
 	call videomem_puts
 	addl $4, %esp
@@ -94,6 +90,7 @@ stack_top:
 	call videomem_puts
 	addl $4, %esp
 
+	popl %ebx
 	lidt idt_ptr
 	lgdt gdt_ptr
 	movw $0x10, %ax
@@ -228,6 +225,11 @@ start64:
 	lgdt gdt_ptr64
 	movabsq $bootstrap_stack_top, %rax
 	movq %rax, %rsp
+
+	/* ebx is 32-bit long, while we use 64-bit long address,
+	 * make sure that higher 32 bits don't contain garbage. */
+	xorq %rdi, %rdi
+	movl %ebx, %edi
 
 	cld
 	movabsq $main, %rax

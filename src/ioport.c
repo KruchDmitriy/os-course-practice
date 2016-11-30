@@ -1,6 +1,6 @@
 #include "ioport.h"
 
-void init_serial() {
+void serial_setup() {
     // turn off interruptions
     // write to 0x3f8 + 1
     out8(0x3f9, 0);
