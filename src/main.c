@@ -7,6 +7,7 @@
 #include <io.h>
 #include <ints.h>
 #include <pit.h>
+#include <spinlock.h>
 
 static void qemu_gdb_hang(void)
 {
@@ -156,6 +157,11 @@ void main(void *bootstrap_info)
 	test_slab();
 	test_alloc();
 	test_kmap();
+
+    // struct spinlock slock;
+    // lock(&slock);
+    // unlock(&slock);
+
 	printf("Tests Finished\n");
 
 	while (1);

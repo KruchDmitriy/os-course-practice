@@ -3,6 +3,7 @@
 #include <string.h>
 #include <alloc.h>
 #include <debug.h>
+#include <spinlock.h>
 
 
 #define WORD_SZ		sizeof(unsigned long long)
@@ -57,7 +58,7 @@ static uintmax_t align_up(uintmax_t size, uintmax_t align)
 static uintmax_t align_down(uintmax_t size, uintmax_t align)
 {
 	return align * floor(size, align);
-} 
+}
 
 static size_t meta_size(size_t objs)
 {
@@ -112,7 +113,7 @@ static struct mem_pool *mem_pool_create(struct mem_cache *cache)
 	if (!page)
 		return 0;
 
-	const uintptr_t addr = page_addr(page); 
+	const uintptr_t addr = page_addr(page);
 	struct mem_pool *meta = va(addr + cache->meta_offs);
 
 	for (int i = 0; i != 1 << cache->pool_order; ++i) {
@@ -153,6 +154,8 @@ void mem_cache_setup(struct mem_cache *cache, size_t size, size_t align)
 
 void mem_cache_shrink(struct mem_cache *cache)
 {
+	lock(&cache->locking_var);
+
 	struct list_head free_slabs;
 	struct list_head *head, *ptr;
 
@@ -168,10 +171,14 @@ void mem_cache_shrink(struct mem_cache *cache)
 		ptr = ptr->next;
 		mem_pool_destroy(cache, pool);
 	}
+
+	unlock(&cache->locking_var);
 }
 
 void mem_cache_release(struct mem_cache *cache)
 {
+	lock(&cache->locking_var);
+
 	BUG_ON(!list_empty(&cache->busy_pools));
 	BUG_ON(!list_empty(&cache->partial_pools));
 
@@ -183,6 +190,8 @@ void mem_cache_release(struct mem_cache *cache)
 		ptr = ptr->next;
 		mem_pool_destroy(cache, pool);
 	}
+
+	unlock(&cache->locking_var);
 }
 
 static int ffs(unsigned long long bitmask)
@@ -246,6 +255,8 @@ static void mem_pool_free(struct mem_cache *cache, struct mem_pool *pool,
 
 void *mem_cache_alloc(struct mem_cache *cache)
 {
+	lock(&cache->locking_var);
+
 	if (!list_empty(&cache->partial_pools)) {
 		struct list_head *ptr = list_first(&cache->partial_pools);
 		struct mem_pool *pool = LIST_ENTRY(ptr, struct mem_pool, ll);
@@ -256,6 +267,8 @@ void *mem_cache_alloc(struct mem_cache *cache)
 			list_del(&pool->ll);
 			list_add(&pool->ll, &cache->busy_pools);
 		}
+
+		unlock(&cache->locking_var);
 		return data;
 	}
 
@@ -269,22 +282,30 @@ void *mem_cache_alloc(struct mem_cache *cache)
 			list_del(&pool->ll);
 			list_add(&pool->ll, &cache->partial_pools);
 		}
+
+		unlock(&cache->locking_var);
 		return data;
 	}
 
 	struct mem_pool *pool = mem_pool_create(cache);
 
-	if (!pool)
+	if (!pool) {
+		unlock(&cache->locking_var);
 		return 0;
+	}
 
 	void *data = mem_pool_alloc(cache, pool);
 
 	list_add(&pool->ll, &cache->partial_pools);
+
+	unlock(&cache->locking_var);
 	return data;
 }
 
 void mem_cache_free(struct mem_cache *cache, void *ptr)
 {
+	lock(&cache->locking_var);
+
 	const size_t pool_size = (size_t)1 << (cache->pool_order + PAGE_SHIFT);
 	const uintptr_t addr = align_down((uintptr_t)ptr, pool_size);
 	struct mem_pool *pool = (struct mem_pool *)(addr + cache->meta_offs);
@@ -300,6 +321,8 @@ void mem_cache_free(struct mem_cache *cache, void *ptr)
 		list_del(&pool->ll);
 		list_add(&pool->ll, &cache->free_pools);
 	}
+
+	unlock(&cache->locking_var);
 }
 
 

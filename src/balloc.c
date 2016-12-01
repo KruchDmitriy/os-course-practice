@@ -1,6 +1,7 @@
 #include <balloc.h>
 #include <memory.h>
 #include <debug.h>
+#include <spinlock.h>
 
 
 struct mboot_info {
@@ -26,6 +27,7 @@ static struct list_head balloc_free_list;
 struct rb_tree free_ranges;
 struct rb_tree memory_map;
 
+static struct spinlock locking_var;
 
 static struct memory_node *balloc_alloc_node(void)
 {
@@ -120,6 +122,8 @@ static void __balloc_remove_range(struct rb_tree *tree,
 uintptr_t __balloc_alloc(size_t size, uintptr_t align,
 			uintptr_t from, uintptr_t to)
 {
+	lock(&locking_var);
+
 	struct rb_tree *tree = &free_ranges;
 	struct rb_node *link = tree->root;
 	struct memory_node *ptr = 0;
@@ -149,11 +153,16 @@ uintptr_t __balloc_alloc(size_t size, uintptr_t align,
 			if (ptr->end > addr + size)
 				__balloc_add_range(tree, addr + size, ptr->end);
 			balloc_free_node(ptr);
+
+			unlock(&locking_var);
+
 			return addr;
 		}
 
 		ptr = RB2MEMORY_NODE(rb_next(&ptr->link.rb));
 	}
+
+	unlock(&locking_var);
 
 	return to;
 }
@@ -163,6 +172,7 @@ uintptr_t balloc_alloc(size_t size, uintptr_t from, uintptr_t to)
 	/* The only situation when we would like a larger alignment is
 	 * when we allocate page for a page table, in that case we would
 	 * need PAGE_SIZE alignment, IOW it's quite reasonable default. */
+
 	uintptr_t align = 64;
 
 	if (size <= 32) align = 32;
@@ -174,7 +184,9 @@ uintptr_t balloc_alloc(size_t size, uintptr_t from, uintptr_t to)
 
 void balloc_free(uintptr_t begin, uintptr_t end)
 {
+	lock(&locking_var);
 	__balloc_add_range(&free_ranges, begin, end);
+	unlock(&locking_var);
 }
 
 
@@ -242,7 +254,7 @@ static void __balloc_dump_ranges(const struct rb_tree *tree)
 	const struct memory_node *node = RB2MEMORY_NODE(rb_leftmost(tree));
 
 	while (node) {
-		printf("memory range: 0x%llx-0x%llx\n",
+		printf("memory range: %llx-%llx\n",
 					(unsigned long long)node->begin,
 					(unsigned long long)node->end);
 		node = RB2MEMORY_NODE(rb_next(&node->link.rb));
@@ -259,9 +271,10 @@ static void balloc_dump_ranges(void)
 
 uintptr_t balloc_memory(void)
 {
+	lock(&locking_var);
 	const struct memory_node *node =
 				RB2MEMORY_NODE(rb_rightmost(&memory_map));
-
+	unlock(&locking_var);
 	return node->end;
 }
 
