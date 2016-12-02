@@ -150,6 +150,8 @@ void mem_cache_setup(struct mem_cache *cache, size_t size, size_t align)
 	list_init(&cache->free_pools);
 	list_init(&cache->partial_pools);
 	list_init(&cache->busy_pools);
+
+	cache->locking_var.locked = SPLINLOCK_UNLOCKED;
 }
 
 void mem_cache_shrink(struct mem_cache *cache)
