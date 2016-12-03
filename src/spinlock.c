@@ -4,9 +4,7 @@
 static int threads_pretend_cs;
 
 void lock(struct spinlock *lock) {
-    if (threads_pretend_cs == 0) {
-        disable_ints();
-    }
+    disable_ints();
 
     do {
         while(atomic_load_explicit(&lock->locked,
