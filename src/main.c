@@ -7,6 +7,10 @@
 #include <io.h>
 #include <ints.h>
 #include <pit.h>
+#include <spinlock.h>
+#include <threads.h>
+
+// #define DEBUG
 
 static void qemu_gdb_hang(void)
 {
@@ -131,13 +135,32 @@ static void test_buddy(void)
 	}
 }
 
+void test_thread_func(void *argv) {
+    printf("This is thread with val %d\n", *((int *)argv));
+}
+
+void test_threads() {
+	int *vars = mem_alloc(254);
+    for (int i = 0; i < 254; i++) {
+    	vars[i] = i;
+    	create_thread(test_thread_func, &vars[i]);
+    }
+    vars[254] = 254;
+    pid_t first_thread = create_thread(test_thread_func, &vars[254]);
+
+    printf("Threads started\n");
+    run_thread(first_thread);
+    printf("Threads ended\n");
+    mem_free(vars);
+}
+
 void main(void *bootstrap_info)
 {
     qemu_gdb_hang();
 
     serial_setup();
     ints_setup();
-	pit_setup();
+    pit_setup();
     balloc_setup(bootstrap_info);
     paging_setup();
     page_alloc_setup();
@@ -148,14 +171,19 @@ void main(void *bootstrap_info)
     mask_master(0xFF);
     mask_slave(0xFF);
 
-    enable_ints();
+    // enable_ints();
 
+    init_desc_table();
 
 	printf("Tests Begin\n");
+
+	test_threads();
 	test_buddy();
 	test_slab();
 	test_alloc();
 	test_kmap();
+
+
 	printf("Tests Finished\n");
 
 	while (1);
