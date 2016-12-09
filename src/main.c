@@ -8,7 +8,9 @@
 #include <ints.h>
 #include <pit.h>
 #include <spinlock.h>
+#include <string.h>
 #include <threads.h>
+#include <fs.h>
 
 // #define DEBUG
 
@@ -154,6 +156,59 @@ void test_threads() {
     mem_free(vars);
 }
 
+void test_fs() {
+    printf("Test file system begin\n");
+
+    init_file_system();
+
+    int   fdescrs[50];
+    int   shift = 0;
+    char  dirname[100];
+    char* filenames[50];
+
+    char buf[] = "write smth";
+
+    for (int i = 0; i < 50; i++) {
+        if (i % 5 == 0) {
+            shift = 0;
+            for (int j = 0; j <= i / 5; j++) {
+                snprintf(dirname + shift, 8, "/dir_%d/", j);
+                shift += 6;
+            }
+            mkdir(dirname);
+            printf("new directory %s\n", dirname);
+        }
+
+        filenames[i] = (char *)mem_alloc(100);
+        snprintf(filenames[i], strlen(dirname) + 7, "%s%d.txt", dirname, i);
+        fdescrs[i] = open(filenames[i], F_WRITE);
+        write(fdescrs[i], buf, 11);
+    }
+
+    print_file_system();
+
+    for (int i = 0; i < 50; i++) {
+        close(fdescrs[i]);
+    }
+
+    char* tmp = (char *)mem_alloc(11);
+    for (int i = 0; i < 50; i++) {
+        fdescrs[i] = open(filenames[i], F_READ);
+        read(fdescrs[i], tmp, 10);
+        if (strcmp(tmp, "write smth") != 0) {
+            printf("Read/write error");
+        }
+    }
+
+    for (int i = 0; i < 50; i++) {
+        close(fdescrs[i]);
+        mem_free(filenames[i]);
+    }
+
+
+    printf("Test file system end\n");
+}
+
 void main(void *bootstrap_info)
 {
     qemu_gdb_hang();
@@ -182,7 +237,7 @@ void main(void *bootstrap_info)
 	test_slab();
 	test_alloc();
 	test_kmap();
-
+    test_fs();
 
 	printf("Tests Finished\n");
 

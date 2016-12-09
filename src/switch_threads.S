@@ -53,7 +53,7 @@ addq $8, %rax
 movq (%rax), %rdi
 
 cld
-callq (%rsp)
+callq *(%rsp)
 
 popq %rax
 popq %rax

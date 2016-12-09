@@ -290,7 +290,6 @@ void basic_sprint(char * s, size_t n_, const char* format, va_list arg) {
 		return;
 	}
 	int64_t n = n_ - 1;
-	printf("my n = %d\n", n);
 	const char *cur_char;
 	char *dst_char = s;
 	for (cur_char = format; *cur_char != '\0' && n >= 0; cur_char++) {
