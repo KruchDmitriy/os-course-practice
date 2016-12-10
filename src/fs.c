@@ -226,7 +226,7 @@ static struct node *create_node(const char *path, enum node_type type) {
 
 
 int open(const char *filename, int flag) {
-   lock(&locking_var);
+    lock(&locking_var);
 
     int fd = -1;
     for (int i = 0; i < MAX_FILE_DESCS; i++) {
@@ -273,9 +273,7 @@ void close(int fd) {
 }
 
 int read(int fd, void *buf, int count) {
-    lock(&locking_var);
     struct node *file_node = fd_table[fd].file_node;
-    unlock(&locking_var);
 
     lock(&file_node->locking_var);
 
@@ -298,9 +296,7 @@ int read(int fd, void *buf, int count) {
 }
 
 int write(int fd, const void *buf, int count) {
-    lock(&locking_var);
     struct node *cur_node = fd_table[fd].file_node;
-    unlock(&locking_var);
 
     lock(&cur_node->locking_var);
 
