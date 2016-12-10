@@ -11,6 +11,7 @@
 #include <string.h>
 #include <threads.h>
 #include <fs.h>
+#include <initramfs.h>
 
 // #define DEBUG
 
@@ -142,13 +143,13 @@ void test_thread_func(void *argv) {
 }
 
 void test_threads() {
-	int *vars = mem_alloc(254);
-    for (int i = 0; i < 254; i++) {
+	int *vars = mem_alloc(5);
+    for (int i = 0; i < 5; i++) {
     	vars[i] = i;
     	create_thread(test_thread_func, &vars[i]);
     }
-    vars[254] = 254;
-    pid_t first_thread = create_thread(test_thread_func, &vars[254]);
+    vars[5] = 5;
+    pid_t first_thread = create_thread(test_thread_func, &vars[5]);
 
     printf("Threads started\n");
     run_thread(first_thread);
@@ -158,8 +159,6 @@ void test_threads() {
 
 void test_fs() {
     printf("Test file system begin\n");
-
-    init_file_system();
 
     int   fdescrs[50];
     int   shift = 0;
@@ -213,6 +212,7 @@ void main(void *bootstrap_info)
 {
     qemu_gdb_hang();
 
+    find_initramfs(bootstrap_info);
     serial_setup();
     ints_setup();
     pit_setup();
@@ -221,6 +221,9 @@ void main(void *bootstrap_info)
     page_alloc_setup();
     mem_alloc_setup();
     kmap_setup();
+    init_file_system();
+    initramfs();
+    print_file_system();
 
     /* TEMP */
     mask_master(0xFF);
@@ -237,7 +240,7 @@ void main(void *bootstrap_info)
 	test_slab();
 	test_alloc();
 	test_kmap();
-    test_fs();
+    // test_fs();
 
 	printf("Tests Finished\n");
 

@@ -1,6 +1,7 @@
 #include <balloc.h>
 #include <memory.h>
 #include <debug.h>
+#include <initramfs.h>
 
 
 struct mboot_info {
@@ -223,6 +224,11 @@ static void balloc_parse_mmap(const struct mboot_info *info)
 	__balloc_add_range(&memory_map, kbegin, kend);
 	__balloc_add_range(&free_ranges, kbegin, kend);
 
+	if (__irmfs_start != 0 && __irmfs_end != 0) {
+		__balloc_add_range(&memory_map, __irmfs_start, __irmfs_end);
+		__balloc_add_range(&free_ranges, __irmfs_start, __irmfs_end);
+	}
+
 	ptr = begin;
 	while (ptr + sizeof(struct mboot_mmap_entry) <= end) {
 		const struct mboot_mmap_entry *entry =
@@ -233,6 +239,10 @@ static void balloc_parse_mmap(const struct mboot_info *info)
 		if (entry->type != 1)
 			__balloc_remove_range(&free_ranges, rbegin, rend);
 		ptr += entry->size + sizeof(entry->size);
+	}
+
+	if (__irmfs_start != 0 && __irmfs_end != 0) {
+		__balloc_remove_range(&free_ranges, __irmfs_start, __irmfs_end);
 	}
 
 	__balloc_remove_range(&free_ranges, kbegin, kend);
