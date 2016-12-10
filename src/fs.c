@@ -7,7 +7,6 @@ struct file_desc {
     struct node* file_node;
     size_t cur_pos;
     int    is_empty;
-    struct spinlock locking_var;
 };
 
 typedef struct file_desc file_desc_table[MAX_FILE_DESCS];
@@ -260,22 +259,26 @@ int open(const char *filename, int flag) {
         desc->file_node = cur_node;
         desc->cur_pos = 0;
 
-        lock(&desc->locking_var);
-
         unlock(&locking_var);
         return fd;
     }
 }
 
 void close(int fd) {
+    lock(&locking_var);
     fd_table[fd].file_node = NULL;
     fd_table[fd].cur_pos = 0;
     fd_table[fd].is_empty = 1;
-    unlock(&fd_table[fd].locking_var);
+    unlock(&locking_var);
 }
 
 int read(int fd, void *buf, int count) {
-    const struct node *file_node = fd_table[fd].file_node;
+    lock(&locking_var);
+    struct node *file_node = fd_table[fd].file_node;
+    unlock(&locking_var);
+
+    lock(&file_node->locking_var);
+
     char *addr = (char *) file_node->addr;
     int   size = (int) file_node->size;
     int   start_pos = (int) fd_table[fd].cur_pos;
@@ -289,11 +292,18 @@ int read(int fd, void *buf, int count) {
 
     fd_table[fd].cur_pos = (size_t)i;
 
+    unlock(&file_node->locking_var);
+
     return i - start_pos;
 }
 
 int write(int fd, const void *buf, int count) {
+    lock(&locking_var);
     struct node *cur_node = fd_table[fd].file_node;
+    unlock(&locking_var);
+
+    lock(&cur_node->locking_var);
+
     size_t cur_pos = fd_table[fd].cur_pos;
     size_t size = cur_node->size;
 
@@ -317,6 +327,8 @@ int write(int fd, const void *buf, int count) {
         addr[i + cur_pos] = dst_addr[i];
         i++;
     }
+
+    unlock(&cur_node->locking_var);
 
     return count;
 }

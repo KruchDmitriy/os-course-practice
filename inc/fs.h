@@ -21,6 +21,8 @@ struct node {
     char*  name;
     void*  addr;
     size_t size;
+
+    struct spinlock locking_var;
 };
 
 void init_file_system();
