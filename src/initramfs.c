@@ -19,14 +19,9 @@ struct mboot_info {
 
 
 struct multiboot_mod_list {
-    /* the memory used goes from bytes 'mod_start' to 'mod_end-1' inclusive */
     uint32_t mod_start;
     uint32_t mod_end;
-
-    /* Module command line */
     uint32_t cmdline;
-
-    /* padding to take it to 16 bytes (must be zero) */
     uint32_t pad;
 };
 
@@ -70,10 +65,8 @@ static void align_up(uint8_t** ptr) {
 }
 
 static uint32_t atoi(char* s, size_t len) {
-    // printf("%s\n",s);
     uint32_t x = 0;
     for (size_t i = 0; i < len; ++i) {
-        // printf("%d\n", x);
         x = x * 16;
         if (s[i] >= '0' && s[i] <= '9') {
             x += s[i] - '0';
@@ -112,7 +105,6 @@ void initramfs() {
 
 
         if (strcmp(name + 1, END_OF_ARCHIVE) == 0) {
-            printf("end\n");
             return;
         }
 
@@ -120,7 +112,6 @@ void initramfs() {
         align_up(&data);
 
         if (data + file_size > end) {
-            printf("stop\n");
             return;
         }
 
